@@ -2,12 +2,12 @@ package com.javatechie.jwt.api.controller;
 
 //import com.javatechie.jwt.api.entity.AuthRequest;
 import com.javatechie.jwt.api.service.CommonService;
-import com.javatechie.jwt.api.util.JwtUtil;
+//import com.javatechie.jwt.api.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+//import org.springframework.security.authentication.AuthenticationManager;
+//import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -42,9 +42,16 @@ public class WelcomeController {
 //        return jwtUtil.generateToken(authRequest.getUserName());
 //    }
 
-    @GetMapping("/search/:id")
+    @GetMapping("/search/{query}")
     public List getCityList(@PathVariable String query) throws Exception {
         List cityList = commonService.getCityList(query);
+
+        return cityList;
+    }
+
+    @GetMapping("/gethistory")
+    public List getHistory() throws Exception {
+        List cityList = commonService.getHistory();
 
         return cityList;
     }

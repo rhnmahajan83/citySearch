@@ -2,6 +2,7 @@ import React from "react";
 import styled from "styled-components";
 import axios from "axios";
 import { useState } from "react";
+import { useCallback } from "react";
 const Container = styled.div`
   //   background: black;
 `;
@@ -15,6 +16,16 @@ const Input = styled.input`
   border: 1px solid black;
 `;
 
+const Dropdown = styled.div`
+  border: 1px solid grey;
+`;
+
+const History = styled.div`
+  margin-top: 50px;
+`;
+
+const Button = styled.button``;
+
 const data = [
   "London",
   "UK",
@@ -27,53 +38,53 @@ const data = [
 
 export default function GoogleScreen() {
   const [resultArr, setResultArr] = useState([]);
+  const [historyArr, setHistoryArr] = useState([]);
 
-  const debounceSearch = (func, wait) => {
-    let timeout;
-    return function mainFunction(...args) {
-      const later = () => {
-        clearTimeout(timeout);
-        func(...args);
-      };
-      clearTimeout(timeout);
-      timeout = setTimeout(delay, wait);
+  const delaySearch = useCallback(
+    debounce((query) => {
+      search(query);
+    }, 1000),
+    []
+  );
+
+  function debounce(fn, delay) {
+    let timer;
+    return function () {
+      let context = this,
+        args = arguments;
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        fn.apply(context, args);
+      }, delay);
     };
-  };
-
-  const onSearch = (query) => {
-    debounceSearch(search(query), 3000);
-  };
-
-  //   const debounceSearch = (query, delay) => {
-  //     let timeout;
-
-  //     return funct(...args) {
-  //         const later = () => {
-  //             clearTimeout(timeout);
-  //             func(...args);
-  //           };
-  //     }
-  //     setTimeout(() => {
-  //       console.log(delay);
-  //       search(query);
-  //     }, delay);
-  //   };
-
-  const filerResp = (resp, query) => {
-    console.log("🚀 ~ file: GoogleScreen.js:40 ~ filerResp ~ resp:", resp);
-
-    let result = resp.filter((s) => s.contains(query));
-    setResultArr(result);
-  };
+  }
 
   const search = (query) => {
+    if (query.length > 0) {
+      axios
+        .get(`http://localhost:9192/search/${query}`)
+        .then((resp) => {
+          console.log("🚀 ~ file: GoogleScreen.js:22 ~ .then ~ resp:", resp);
+          setResultArr(resp.data);
+        })
+        .catch((err) => {
+          setResultArr([]);
+          console.log("🚀 ~ file: GoogleScreen.js:25 ~ search ~ err:", err);
+        });
+    } else {
+      setResultArr([]);
+    }
+  };
+
+  const getSearchHistory = () => {
     axios
-      .get(`https://run.mocky.io/v3/05ac0e7a-f08e-4fec-afb2-e05235ba7636`)
+      .get(`http://localhost:9192/gethistory`)
       .then((resp) => {
-        filerResp(resp.data.data, query);
+        setHistoryArr(resp.data);
         console.log("🚀 ~ file: GoogleScreen.js:22 ~ .then ~ resp:", resp);
       })
       .catch((err) => {
+        setHistoryArr([]);
         console.log("🚀 ~ file: GoogleScreen.js:25 ~ search ~ err:", err);
       });
   };
@@ -81,8 +92,22 @@ export default function GoogleScreen() {
   return (
     <Container className="container">
       <GoogleText className="txt-google">GOOGLE</GoogleText>
-      <Input type="text" onChange={(e) => onSearch(e.target.value)} />
-      <ul></ul>
+      <Input type="text" onChange={(e) => delaySearch(e.target.value)} />
+      {resultArr.length !== 0 ? (
+        <Dropdown>
+          {resultArr.map((res) => {
+            return <div>{res}</div>;
+          })}
+        </Dropdown>
+      ) : null}
+
+      <Button onClick={() => getSearchHistory()}>Get History</Button>
+      <History>
+        Your Search History:
+        {historyArr.map((res) => {
+          return <div>{res}</div>;
+        })}
+      </History>
     </Container>
   );
 }
